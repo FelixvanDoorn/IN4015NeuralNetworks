@@ -14,6 +14,7 @@
 
 """Contains model definitions."""
 import math
+import numpy as np
 
 import models
 import tensorflow as tf
@@ -44,6 +45,7 @@ class LogisticModel(models.BaseModel):
     output = slim.fully_connected(
         model_input, vocab_size, activation_fn=tf.nn.sigmoid,
         weights_regularizer=slim.l2_regularizer(0.01))
+
     return {"predictions": output}
 
 class MoeModel(models.BaseModel):
@@ -104,10 +106,27 @@ class MoeModel(models.BaseModel):
 
 class CNNModel(models.BaseModel):
 
-  def create_model(self, model_input, vocab_size, l2_penalty=1e-8, **unused_params):
+  def create_model(self, model_input, vocab_size, **unused_params):
+      
+    
+    input_layer = tf.reshape(model_input, [-1,32,32,1])
+    
+    
+    net = slim.conv2d(input_layer, 10, [3, 3])
 
+    
+    net = slim.max_pool2d(net, [32,32], [32,32], padding="same")   
+
+    output = slim.fully_connected(
+    net, vocab_size, activation_fn=tf.nn.sigmoid,
+    weights_regularizer=slim.l2_regularizer(0.01))
+
+    return {"predictions": output}
+    
+    
+    """
     # Input Layer
-    input_layer = tf.reshape(model_input, [-1, 32, 32, 3])
+    input_layer = tf.reshape(model_input, [-1, 1,32,32])
 
 
     # Convolutional Layer #1
@@ -118,9 +137,23 @@ class CNNModel(models.BaseModel):
       strides=(2, 2),
       padding="same",
       activation=tf.nn.relu)
+      
+    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[32, 32], strides=32,padding="same")
 
-    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
+    #pool1_flat = tf.reshape(pool1, [-1, 1,1,8*96])
 
+    #dense = tf.layers.dense(inputs=pool1_flat, units=1024, activation=tf.nn.relu)
+    
+    
+    #logits = tf.layers.dense(inputs=dense, units=vocab_size)
+    
+    output = slim.fully_connected(
+        pool1, vocab_size, activation_fn=tf.nn.sigmoid,
+        weights_regularizer=slim.l2_regularizer(0.01))
+     
+    """
+    
+    """
     conv2 = tf.layers.conv2d(
       inputs=pool1,
       filters=256,
@@ -151,7 +184,7 @@ class CNNModel(models.BaseModel):
       kernel_size=[3, 3],
       padding="same",
       activation=tf.nn.relu)
-
+    
     pool3 = tf.layers.max_pooling2d(inputs=conv5, pool_size=[2, 2], strides=2)
 
     pool3_flat = tf.reshape(pool3, [-1, 7 * 7 * 64])
@@ -163,9 +196,5 @@ class CNNModel(models.BaseModel):
       inputs=dense2, rate=0.4, training=mode == learn.ModeKeys.TRAIN)
 
     logits = tf.layers.dense(inputs=dropout2, units=10)
+    """
 
-
-    # output = slim.fully_connected(
-    #     model_input, vocab_size, activation_fn=tf.nn.sigmoid,
-    #     weights_regularizer=slim.l2_regularizer(l2_penalty))
-    return {"predictions": output}
