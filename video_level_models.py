@@ -48,6 +48,13 @@ class LogisticModel(models.BaseModel):
 
     return {"predictions": output}
 
+class SimpleMultiLayerPerceptronModel(models.BaseModel):
+
+    def create_model(self, model_input, vocab_size,  **unused_params):
+        output = slim.stack(model_input, slim.fully_connected, [vocab_size, vocab_size], scope='fc',
+                            activation_fn=tf.nn.sigmoid, weights_regularizer=slim.l2_regularizer(0.01))
+        return {"predictions": output}
+
 class MoeModel(models.BaseModel):
   """A softmax over a mixture of logistic models (with L2 regularization)."""
 
