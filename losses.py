@@ -50,6 +50,18 @@ class CrossEntropyLoss(BaseLoss):
       cross_entropy_loss = tf.negative(cross_entropy_loss)
       return tf.reduce_mean(tf.reduce_sum(cross_entropy_loss, 1))
 
+class MaeLoss(BaseLoss):
+  """Calculate mean absolute error.
+  """
+
+  def calculate_loss(self, predictions, labels, **unused_params):
+    with tf.name_scope("loss_mae"):
+      epsilon = 10e-6
+      float_labels = tf.cast(labels, tf.float32)
+      mae_loss = abs(float_labels - predictions)
+      return tf.reduce_mean(tf.reduce_sum(mae_loss, 1))
+
+
 
 class HingeLoss(BaseLoss):
   """Calculate the hinge loss between the predictions and labels.
