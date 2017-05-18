@@ -289,13 +289,13 @@ class VAEModel(models.BaseModel):
         K = 30
         N = 10
         x = tf.placeholder(tf.float32, [vocab_size, vocab_size])
-        net = slim.stack(x, slim.fully_connected, [512, 256])
+        net = slim.stack(x, slim.fully_connected, [vocab_size, vocab_size])
         logits_y = tf.reshape(slim.fully_connected(net, K * N, activation_fn=None), [-1, K])
         q_y = tf.nn.softmax(logits_y)
         log_q_y = tf.log(q_y + 1e-20)
 
         tau = tf.Variable(5.0, name="temperature")
         y = tf.reshape(gumbel_softmax(logits_y, tau, hard=False), [-1, N, K])
-        output = slim.stack(slim.flatten(y), slim.fully_connected, [256, 512])
+        output = slim.stack(slim.flatten(y), slim.fully_connected, [vocab_size, vocab_size])
 
         return {"predictions": output}
