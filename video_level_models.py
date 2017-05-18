@@ -288,7 +288,7 @@ class VAEModel(models.BaseModel):
     def create_model(self, model_input, vocab_size, **unused_params):
         K = 30
         N = 10
-        x = tf.placeholder(tf.float32, [None, vocab_size])
+        x = tf.placeholder(tf.float32, [vocab_size, vocab_size])
         net = slim.stack(x, slim.fully_connected, [512, 256])
         logits_y = tf.reshape(slim.fully_connected(net, K * N, activation_fn=None), [-1, K])
         q_y = tf.nn.softmax(logits_y)
