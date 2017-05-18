@@ -23,6 +23,40 @@ import utils
 from tensorflow import flags
 import tensorflow.contrib.slim as slim
 
+
+Bernoulli = tf.contrib.distributions.Bernoulli
+
+
+
+def sample_gumbel(shape, eps=1e-20):
+  """Sample from Gumbel(0, 1)"""
+  U = tf.random_uniform(shape,minval=0,maxval=1)
+  return -tf.log(-tf.log(U + eps) + eps)
+
+def gumbel_softmax_sample(logits, temperature):
+  """ Draw a sample from the Gumbel-Softmax distribution"""
+  y = logits + sample_gumbel(tf.shape(logits))
+  return tf.nn.softmax( y / temperature)
+
+def gumbel_softmax(logits, temperature, hard=False):
+  """Sample from the Gumbel-Softmax distribution and optionally discretize.
+  Args:
+    logits: [batch_size, n_class] unnormalized log-probs
+    temperature: non-negative scalar
+    hard: if True, take argmax, but differentiate w.r.t. soft sample y
+  Returns:
+    [batch_size, n_class] sample from the Gumbel-Softmax distribution.
+    If hard=True, then the returned sample will be one-hot, otherwise it will
+    be a probabilitiy distribution that sums to 1 across classes
+  """
+  y = gumbel_softmax_sample(logits, temperature)
+  if hard:
+    k = tf.shape(logits)[-1]
+    #y_hard = tf.cast(tf.one_hot(tf.argmax(y,1),k), y.dtype)
+    y_hard = tf.cast(tf.equal(y,tf.reduce_max(y,1,keep_dims=True)),y.dtype)
+    y = tf.stop_gradient(y_hard - y) + y
+  return y
+
 FLAGS = flags.FLAGS
 flags.DEFINE_integer(
     "moe_num_mixtures", 2,
@@ -246,4 +280,22 @@ class RBMModel(models.BaseModel):
         output = slim.fully_connected(
             input_layer, vocab_size, activation_fn=tf.nn.sigmoid,
             weights_regularizer=slim.l2_regularizer(0.01))
+        return {"predictions": output}
+
+
+class VAEModel(models.BaseModel):
+
+    def create_model(self, model_input, vocab_size, **unused_params):
+        K = 30
+        N = 10
+        x = tf.placeholder(tf.float32, [None, vocab_size])
+        net = slim.stack(x, slim.fully_connected, [512, 256])
+        logits_y = tf.reshape(slim.fully_connected(net, K * N, activation_fn=None), [-1, K])
+        q_y = tf.nn.softmax(logits_y)
+        log_q_y = tf.log(q_y + 1e-20)
+
+        tau = tf.Variable(5.0, name="temperature")
+        y = tf.reshape(gumbel_softmax(logits_y, tau, hard=False), [-1, N, K])
+        output = slim.stack(slim.flatten(y), slim.fully_connected, [256, 512])
+
         return {"predictions": output}
