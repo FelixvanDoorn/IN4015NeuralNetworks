@@ -271,30 +271,45 @@ class MLPModel(models.BaseModel):
 """"
 This implements the Restricted Boltzmann Machine.
 """
+n_hidden_1 = 256
+n_hidden_2 = 128
+n_input = 1024
 
+weights = {
+    'encoder_h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
+    'encoder_h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
+    'decoder_h1': tf.Variable(tf.random_normal([n_hidden_2, n_hidden_1])),
+    'decoder_h2': tf.Variable(tf.random_normal([n_hidden_1, n_input])),
+}
+biases = {
+    'encoder_b1': tf.Variable(tf.random_normal([n_hidden_1])),
+    'encoder_b2': tf.Variable(tf.random_normal([n_hidden_2])),
+    'decoder_b1': tf.Variable(tf.random_normal([n_hidden_1])),
+    'decoder_b2': tf.Variable(tf.random_normal([n_input])),
+}
 
-class RBMModel(models.BaseModel):
+def encoder(x):
+    # Encoder Hidden layer with sigmoid activation #1
+    layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['encoder_h1']),
+                                   biases['encoder_b1']))
+    # Decoder Hidden layer with sigmoid activation #2
+    layer_2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_1, weights['encoder_h2']),
+                                   biases['encoder_b2']))
+    return layer_2
 
-    def create_model(self, model_input, vocab_size, **unused_params):
-        input_layer = slim.fully_connected(model_input, 1024)
-        output = slim.fully_connected(
-            input_layer, vocab_size, activation_fn=tf.nn.sigmoid,
-            weights_regularizer=slim.l2_regularizer(0.01))
-        return {"predictions": output}
-
+def decoder(x):
+    # Encoder Hidden layer with sigmoid activation #1
+    layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['decoder_h1']),
+                                   biases['decoder_b1']))
+    # Decoder Hidden layer with sigmoid activation #2
+    layer_2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_1, weights['decoder_h2']),
+                                   biases['decoder_b2']))
+    return layer_2
 
 class VAEModel(models.BaseModel):
 
     def create_model(self, model_input, vocab_size, **unused_params):
-        K = 30
-        N = 10
-        net = slim.stack(model_input, slim.fully_connected, [vocab_size, vocab_size])
-        logits_y = tf.reshape(slim.fully_connected(net, K * N, activation_fn=None), [-1, K])
-        q_y = tf.nn.softmax(logits_y)
-        log_q_y = tf.log(q_y + 1e-20)
+        encoder_op = encoder(model_input)
+        decoder_op = decoder(encoder_op)
 
-        tau = tf.Variable(5.0, name="temperature")
-        y = tf.reshape(gumbel_softmax(logits_y, tau, hard=False), [-1, N, K])
-        output = slim.stack(slim.flatten(y), slim.fully_connected, [vocab_size, vocab_size])
-
-        return {"predictions": output}
+        return {"predictions": decoder_op}
