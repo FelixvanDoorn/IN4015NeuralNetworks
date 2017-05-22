@@ -22,7 +22,7 @@ input = np.array([[2.0, 1.0, 1.0, 2.0],
 
 
 
-data = pd.read_csv('/home/philip/Desktop/kaggle/train_labels.csv',names=['something','labels'])
+data = pd.read_csv('train_labels.csv',names=['something','labels'])
    
 
 def convert(label):
