@@ -33,7 +33,7 @@ def convert(label):
     return output
 
 
-maxData = 500000 # change this to maximum possible value
+maxData = 400000 # change this to maximum possible value
 trX=data['labels'][0:maxData].apply(convert)
 trX.names = ['labels']
 trX = np.matrix(trX.tolist())
