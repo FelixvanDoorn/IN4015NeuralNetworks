@@ -242,8 +242,4 @@ This implements the Restricted Boltzmann Machine.
 class RBMModel(models.BaseModel):
 
     def create_model(self, model_input, vocab_size, **unused_params):
-        input_layer = slim.fully_connected(model_input, 1024)
-        output = slim.fully_connected(
-            input_layer, vocab_size, activation_fn=tf.nn.sigmoid,
-            weights_regularizer=slim.l2_regularizer(0.01))
-        return {"predictions": output}
+        return None

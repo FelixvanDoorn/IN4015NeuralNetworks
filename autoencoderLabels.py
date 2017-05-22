@@ -6,7 +6,7 @@ Created on Sun May 21 20:45:51 2017
 """
 
 
-import tensorflow as tf
+#import tensorflow as tf
 import numpy as np
 import math
 import pandas as pd
@@ -32,7 +32,7 @@ def convert(label):
         output[split_label[i]] = 1
     return output
 
-trX=data.labels[0:500].apply(convert)
+trX=data['labels'][0:500].apply(convert)
 trX.names = ['labels']
 trX = np.matrix(trX.tolist())
 
