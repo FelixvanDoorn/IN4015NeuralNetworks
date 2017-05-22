@@ -22,7 +22,7 @@ input = np.array([[2.0, 1.0, 1.0, 2.0],
 
 
 
-data = pd.read_csv('train_labels.csv',names=['something','labels'])
+data = pd.read_csv('/home/philip/Desktop/kaggle/train_labels.csv',names=['something','labels'])
    
 
 def convert(label):
@@ -32,7 +32,9 @@ def convert(label):
         output[split_label[i]] = 1
     return output
 
-trX=data['labels'][0:500].apply(convert)
+
+maxData = 500 # change this to maximum possible value
+trX=data['labels'][0:maxData].apply(convert)
 trX.names = ['labels']
 trX = np.matrix(trX.tolist())
 
@@ -54,7 +56,7 @@ input_data=input
 output_data=output
 # Autoencoder with 1 hidden layer
 n_samp, n_input = input_data.shape 
-n_hidden = 4716
+n_hidden = 512
 
 x = tf.placeholder("float", [None, n_input])
 # Weights and biases to hidden layer
@@ -106,7 +108,15 @@ print(a.shape)
 y=sess.run(y, feed_dict={x: input_data})
 print(y.shape)
 
+Wh = sess.run(Wh)
+bh = sess.run(bh)
+bo = sess.run(bo)
 
+a=np.array([Wh,bh,bo])
+
+
+import pickle
+pickle.dump(a, open( "autoencoderParameters.p", "wb" ) )
 
 
 
