@@ -16,6 +16,7 @@
 import json
 import os
 import time
+import glob
 
 import eval_util
 import export_model
@@ -251,7 +252,8 @@ def build_graph(reader,
 
 
   ############# Modify labels ###############
-  parameters = pickle.load( open( "autoencoderParameters.p", "rb" ) )
+  pickleFiles = glob.glob("*.p")
+  parameters = pickle.load( open( pickleFiles[0], "rb" ) )
   Wh = tf.constant(parameters[0])
   bh = tf.constant(parameters[1])
   bo = tf.constant(parameters[2])
