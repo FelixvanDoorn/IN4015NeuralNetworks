@@ -253,7 +253,7 @@ def build_graph(reader,
 
   ############# Modify labels ###############
   pickleFiles = glob.glob("*.p")
-  parameters = pickle.load( open( pickleFiles[0], "rb" ) )
+  parameters = pickle.load( open( pickleFiles, "rb" ) )
   Wh = tf.constant(parameters[0])
   bh = tf.constant(parameters[1])
   bo = tf.constant(parameters[2])
