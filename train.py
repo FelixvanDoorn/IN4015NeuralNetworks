@@ -31,6 +31,7 @@ from tensorflow import gfile
 from tensorflow import logging
 from tensorflow.python.client import device_lib
 import utils
+import pickle
 
 FLAGS = flags.FLAGS
 
@@ -247,6 +248,20 @@ def build_graph(reader,
           batch_size=batch_size * num_towers,
           num_readers=num_readers,
           num_epochs=num_epochs))
+
+
+  ############# Modify labels ###############
+  parameters = pickle.load( open( "autoencoderParameters.p", "rb" ) )
+  Wh = tf.constant(parameters[0])
+  bh = tf.constant(parameters[1])
+  bo = tf.constant(parameters[2])
+  Wo = tf.transpose(Wh)
+  
+  labels_batch = tf.to_float(labels_batch)
+  h = tf.nn.tanh(tf.matmul(labels_batch,Wh) + bh)
+  labels_batch = tf.nn.tanh(tf.matmul(h,Wo) + bo)
+  ############################################
+
   tf.summary.histogram("model/input_raw", model_input_raw)
 
   feature_dim = len(model_input_raw.get_shape()) - 1
@@ -418,6 +433,7 @@ class Trainer(object):
 
           if self.max_steps and self.max_steps <= global_step_val:
             self.max_steps_reached = True
+          print(labels.eval(session=sess))
 
           if self.is_master and global_step_val % 10 == 0 and self.train_dir:
             eval_start_time = time.time()
@@ -427,7 +443,7 @@ class Trainer(object):
             gap = eval_util.calculate_gap(predictions_val, labels_val)
             eval_end_time = time.time()
             eval_time = eval_end_time - eval_start_time
-
+            
             logging.info("training step " + str(global_step_val) + " | Loss: " + ("%.2f" % loss_val) +
               " Examples/sec: " + ("%.2f" % examples_per_second) + " | Hit@1: " +
               ("%.2f" % hit_at_one) + " PERR: " + ("%.2f" % perr) +
