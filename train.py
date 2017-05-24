@@ -16,7 +16,6 @@
 import json
 import os
 import time
-import glob
 
 import eval_util
 import export_model
@@ -33,6 +32,7 @@ from tensorflow import logging
 from tensorflow.python.client import device_lib
 import utils
 import pickle
+import urllib2
 
 FLAGS = flags.FLAGS
 
@@ -252,9 +252,7 @@ def build_graph(reader,
 
 
   ############# Modify labels ###############
-  pickleFiles = glob.glob("*.p")
-  print len(pickleFiles)
-  parameters = pickle.load( open(pickleFiles[0], "rb" ) )
+  parameters = pickle.load( urllib2.urlopen("https://storage.googleapis.com/dutchflu_autoencoder_bucket/autoencoderParameters4.p") )
   Wh = tf.constant(parameters[0])
   bh = tf.constant(parameters[1])
   bo = tf.constant(parameters[2])
@@ -436,7 +434,7 @@ class Trainer(object):
 
           if self.max_steps and self.max_steps <= global_step_val:
             self.max_steps_reached = True
-          print(labels.eval(session=sess))
+          # print(labels.eval(session=sess))
 
           if self.is_master and global_step_val % 10 == 0 and self.train_dir:
             eval_start_time = time.time()
