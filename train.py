@@ -253,6 +253,7 @@ def build_graph(reader,
 
   ############# Modify labels ###############
   print os.getcwd()
+  print os.environ('BUCKET_NAME')
   pickleFiles = glob.glob("*.p")
   print len(pickleFiles)
   parameters = pickle.load( open(pickleFiles[0], "rb" ) )
