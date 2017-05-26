@@ -242,22 +242,21 @@ For now I will stick to a Committee of Multi-layer Perceptrons.
 
 class COMModel(models.BaseModel):
 
-    def create_model(self, model_input,vocab_size, **unused_params):
+    def create_model(self, model_input, vocab_size, **unused_params):
         net_one_input = slim.fully_connected(model_input, 1024)
         net_one_layer_one = slim.fully_connected(net_one_input, 2048)
         net_one_output = slim.fully_connected(
-        vocab_size, activation_fn=tf.nn.sigmoid,
-        weights_regularizer=slim.l2_regularizer(0.01))
+            net_one_layer_one, vocab_size, activation_fn=tf.nn.sigmoid, weights_regularizer=slim.l2_regularizer(0.01))
 
         net_two_input = slim.fully_connected(model_input, 1024)
         net_two_layer_one = slim.fully_connected(net_two_input, 2048)
-        net_two_output = slim.fully_connected(
+        net_two_output = slim.fully_connected(net_two_layer_one,
         vocab_size, activation_fn=tf.nn.sigmoid,
         weights_regularizer=slim.l2_regularizer(0.01))
 
         net_three_input = slim.fully_connected(model_input, 1024)
         net_three_layer_one = slim.fully_connected(net_three_input, 2048)
-        net_three_output = slim.fully_connected(
+        net_three_output = slim.fully_connected( net_three_layer_one,
         vocab_size, activation_fn=tf.nn.sigmoid,
         weights_regularizer=slim.l2_regularizer(0.01))
 
