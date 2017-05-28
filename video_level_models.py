@@ -261,4 +261,4 @@ class COMModel(models.BaseModel):
         weights_regularizer=slim.l2_regularizer(0.01))
 
         output  = (net_one_output + net_two_output + net_three_output)/3
-        return {"Predictions": output}
+        return {"predictions": output}
