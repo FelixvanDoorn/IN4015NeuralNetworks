@@ -282,3 +282,30 @@ class COMModel(models.BaseModel):
             weights_regularizer=slim.l2_regularizer(l2_penalty),
             scope="gates")
 
+        expert_activations = slim.fully_connected(
+            model_input,
+            vocab_size * num_experts,
+            activation_fn=None,
+            weights_regularizer=slim.l2_regularizer(l2_penalty),
+            scope="experts")
+
+        experts = slim.fully_connected(
+            expert_activations,
+            vocab_size * num_experts,
+            activation_fn=tf.nn.sigmoid,
+            weights_regularizer=slim.l2_regularizer(l2_penalty),
+            scope="experts")
+
+        gating_distribution = tf.nn.softmax(tf.reshape(
+            gate_activations,
+            [-1, num_experts + 1]))  # (Batch * #Labels) x (num_mixtures + 1)
+        expert_distribution = tf.nn.sigmoid(tf.reshape(
+            experts,
+            [-1, num_experts]))  # (Batch * #Labels) x num_mixtures
+
+        final_probabilities_by_class_and_batch = tf.reduce_sum(
+            gating_distribution[:, :num_experts] * expert_distribution, 1)
+        final_probabilities = tf.reshape(final_probabilities_by_class_and_batch,
+                                         [-1, vocab_size])
+        return {"predictions": final_probabilities}
+
