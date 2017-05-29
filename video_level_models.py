@@ -287,14 +287,14 @@ class COMModel(models.BaseModel):
             vocab_size * num_experts,
             activation_fn=None,
             weights_regularizer=slim.l2_regularizer(l2_penalty),
-            scope="experts")
+            scope="experts_l1")
 
         experts = slim.fully_connected(
             expert_activations,
             vocab_size * num_experts,
             activation_fn=tf.nn.sigmoid,
             weights_regularizer=slim.l2_regularizer(l2_penalty),
-            scope="experts")
+            scope="experts_l2")
 
         gating_distribution = tf.nn.softmax(tf.reshape(
             gate_activations,
