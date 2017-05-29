@@ -236,11 +236,10 @@ class MLPModel(models.BaseModel):
 
 """"
 This implements an Ensemble of MLP's. 
-There are a few options here. Bagging, Committee of Machines or an Associative network. 
-For now I will stick to a Committee of Multi-layer Perceptrons. 
+Linearly combine output with equal weights. 
 """
 
-class COMModel(models.BaseModel):
+class AverageModel(models.BaseModel):
 
     def create_model(self, model_input, vocab_size, **unused_params):
         net_one_input = slim.fully_connected(model_input, 1024)
@@ -262,3 +261,24 @@ class COMModel(models.BaseModel):
 
         output  = (net_one_output + net_two_output + net_three_output)/3
         return {"predictions": output}
+
+"""
+The Committee of Machines is similar to the Mixture of Experts.
+Here our experts are MLP's and not logistics. 
+"""
+
+
+class COMModel(models.BaseModel):
+
+    def create_model(self,model_input,vocab_size,num_experts=None,l2_penalty=1e-5,**unused_params):
+        num_experts = num_experts or FLAGS.moe_num_mixtures
+
+        #The gating networks is what divides the feature space among the experts.
+        gate_activations = slim.fully_connected(
+            model_input,
+            vocab_size * (num_experts + 1),
+            activation_fn=None,
+            biases_initializer=None,
+            weights_regularizer=slim.l2_regularizer(l2_penalty),
+            scope="gates")
+
